@@ -1,4 +1,6 @@
 mod backend;
+mod features;
+mod file;
 
 use backend::Backend;
 use tokio::io::{stdin, stdout};

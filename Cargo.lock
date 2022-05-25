@@ -151,6 +151,8 @@ dependencies = [
 name = "gitignore_ultimate_server"
 version = "0.0.0"
 dependencies = [
+ "dashmap",
+ "ropey",
  "tokio",
  "tower-lsp",
 ]
@@ -390,6 +392,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ropey"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa0dd9b26e2a102b33d400b7b7d196c81a4014eb96eda90b1c5b48d7215d9633"
+dependencies = [
+ "smallvec",
+ "str_indices",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,6 +485,12 @@ dependencies = [
  "libc",
  "winapi",
 ]
+
+[[package]]
+name = "str_indices"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adfad63a1b47951101cd667a85b2959a62910cf03f814fff25df89c460b873f8"
 
 [[package]]
 name = "syn"

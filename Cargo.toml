@@ -9,3 +9,9 @@ features = ["full"]
 
 [dependencies.tower-lsp]
 version = "*"
+
+[dependencies.dashmap]
+version = "5"
+
+[dependencies.ropey]
+version = "1"
