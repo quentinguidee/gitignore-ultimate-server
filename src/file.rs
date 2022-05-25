@@ -14,6 +14,14 @@ impl File {
         }
     }
 
+    pub fn get_line_content(&self, line_number: u32) -> String {
+        self.text.line(line_number as usize).to_string()
+    }
+
+    pub fn path(&self) -> String {
+        self.url.path().to_string()
+    }
+
     pub fn apply_change(&mut self, change: TextDocumentContentChangeEvent) {
         let text = change.text;
         let range = match change.range {

@@ -29,6 +29,7 @@ impl Backend {
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         let completion_options = CompletionOptions {
+            trigger_characters: Some(vec![String::from("/")]),
             ..Default::default()
         };
 
@@ -74,7 +75,10 @@ impl LanguageServer for Backend {
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        Ok(self.completion_module.get_response(params))
+        Ok(self
+            .completion_module
+            .get_response(params, &self.workspace, &self.client)
+            .await)
     }
 
     async fn shutdown(&self) -> Result<()> {

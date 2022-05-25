@@ -10,15 +10,15 @@ use tower_lsp::{
 use crate::file::File;
 
 pub struct Workspace {
-    files: DashMap<String, File>,
+    pub files: DashMap<String, File>,
 }
 
 impl Workspace {
-    fn add_file(&self, file: File) {
+    pub fn add_file(&self, file: File) {
         self.files.insert(file.url.to_string(), file);
     }
 
-    fn remove_file(&self, url: Url) {
+    pub fn remove_file(&self, url: Url) {
         self.files.remove(&url.to_string());
     }
 }
