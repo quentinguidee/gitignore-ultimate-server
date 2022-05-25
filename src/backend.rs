@@ -1,15 +1,14 @@
-use dashmap::DashMap;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
 
 use crate::features::completion::CompletionModule;
-use crate::file::File;
+use crate::workspace::Workspace;
 
 pub struct Backend {
     client: Client,
 
-    files: DashMap<String, File>,
+    workspace: Workspace,
 
     completion_module: CompletionModule,
 }
@@ -19,7 +18,7 @@ impl Backend {
         Backend {
             client,
 
-            files: DashMap::new(),
+            workspace: Workspace::new(),
 
             completion_module: CompletionModule::default(),
         }
@@ -63,32 +62,15 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let url = params.text_document.uri;
-        let text = params.text_document.text;
-
-        self.files.insert(url.to_string(), File::new(url, text));
+        self.workspace.open(params);
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        let mut file = match self.files.get_mut(&params.text_document.uri.to_string()) {
-            Some(file) => (file),
-            None => {
-                let error = format!(
-                    "The file {url} is not opened on the server.",
-                    url = params.text_document.uri.to_string()
-                );
-                self.client.log_message(MessageType::ERROR, error).await;
-                return;
-            }
-        };
-
-        for change in params.content_changes {
-            file.apply_change(change)
-        }
+        self.workspace.apply_changes(params, &self.client).await;
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        self.files.remove(&params.text_document.uri.to_string());
+        self.workspace.close(params);
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
