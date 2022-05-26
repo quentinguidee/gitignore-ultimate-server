@@ -62,6 +62,10 @@ impl LanguageServer for Backend {
             .await;
     }
 
+    async fn shutdown(&self) -> Result<()> {
+        Ok(())
+    }
+
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         self.workspace.open(params);
     }
@@ -79,9 +83,5 @@ impl LanguageServer for Backend {
             .completion_module
             .get_response(params, &self.workspace, &self.client)
             .await)
-    }
-
-    async fn shutdown(&self) -> Result<()> {
-        Ok(())
     }
 }
