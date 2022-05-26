@@ -17,7 +17,10 @@ use crate::workspace::Workspace;
 pub struct CompletionModule {}
 
 impl CompletionModule {
-    fn completion_item_for_path(path: Result<DirEntry, Error>) -> Option<CompletionItem> {
+    fn completion_item_for_path(
+        path: Result<DirEntry, Error>,
+        current_completed_file_name: String,
+    ) -> Option<CompletionItem> {
         let path = match path {
             Ok(path) => path,
             Err(_) => return None,
@@ -29,24 +32,38 @@ impl CompletionModule {
             None => return None,
         };
 
+        if current_completed_file_name.starts_with(".") && !file_name.starts_with(".") {
+            return None;
+        }
+
         let kind = if path.path().is_dir() {
             CompletionItemKind::FOLDER
         } else {
             CompletionItemKind::FILE
         };
 
+        let label = file_name.to_string();
+        let insert_text = match current_completed_file_name.find(".") {
+            Some(last_dot_index) => label[(last_dot_index + 1)..].to_string(),
+            None => label.clone(),
+        };
+
         Some(CompletionItem {
-            label: file_name.to_string(),
+            label,
             detail: Some(path.path().display().to_string()),
             kind: Some(kind),
+            insert_text: Some(insert_text),
             ..Default::default()
         })
     }
 
-    fn completion_items_for_paths(paths: ReadDir) -> CompletionResponse {
+    fn completion_items_for_paths(
+        paths: ReadDir,
+        current_completed_file_name: String,
+    ) -> CompletionResponse {
         let mut items: Vec<CompletionItem> = Vec::new();
         for path in paths {
-            match Self::completion_item_for_path(path) {
+            match Self::completion_item_for_path(path, current_completed_file_name.clone()) {
                 Some(item) => items.push(item),
                 None => continue,
             }
@@ -88,13 +105,23 @@ impl CompletionModule {
         client.log_message(MessageType::INFO, line_content).await;
 
         let path = Path::new(line_content);
-        let path = if !line_content.ends_with("/") {
+        let relative_path = if !line_content.ends_with("/") {
             path.parent().unwrap_or_else(|| Path::new(""))
         } else {
             path
         };
 
-        let complete_path = Path::join(gitignore_path, path);
+        let path_string = match path.to_str() {
+            Some(path) => path.replace("\\", "/"),
+            None => return None,
+        };
+
+        let file_name = match path_string.rsplit_once("/") {
+            Some((_, file_name)) => file_name,
+            None => line_content,
+        };
+
+        let complete_path = Path::join(gitignore_path, relative_path);
 
         let paths = match read_dir(complete_path) {
             Ok(paths) => paths,
@@ -104,6 +131,9 @@ impl CompletionModule {
             }
         };
 
-        Some(Self::completion_items_for_paths(paths))
+        Some(Self::completion_items_for_paths(
+            paths,
+            file_name.to_string(),
+        ))
     }
 }
