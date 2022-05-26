@@ -77,52 +77,47 @@ impl CompletionModule {
         workspace: &Workspace,
         client: &Client,
     ) -> Option<CompletionResponse> {
-        let gitignore_uri = &params.text_document_position.text_document.uri;
-
-        let file = workspace.files.get(&gitignore_uri.to_string());
-        let file = match file {
-            Some(file) => (file),
+        // Get gitignore file
+        let gitignore_file_uri = &params.text_document_position.text_document.uri;
+        let gitignore_file = workspace.files.get(&gitignore_file_uri.to_string());
+        let gitignore_file = match gitignore_file {
+            Some(file) => file,
             None => {
                 let error = format!(
                     "The file {url} is not opened on the server.",
-                    url = params.text_document_position.text_document.uri.to_string()
+                    url = gitignore_file_uri.to_string()
                 );
                 client.log_message(MessageType::ERROR, error).await;
                 return None;
             }
         };
-        let file = &file.value();
+        let gitignore_file = &gitignore_file.value();
 
-        let line_content = file.get_line_content(params.text_document_position.position.line);
+        // Get currently typed path
+        let line_content =
+            gitignore_file.get_line_content(params.text_document_position.position.line);
         let line_content = line_content.trim();
-
-        let gitignore_path = file.path();
-        let gitignore_path = match Path::new(&gitignore_path).parent() {
-            Some(path) => path,
-            None => return None,
-        };
-
-        client.log_message(MessageType::INFO, line_content).await;
-
         let path = Path::new(line_content);
         let relative_path = if !line_content.ends_with("/") {
-            path.parent().unwrap_or_else(|| Path::new(""))
+            path.parent().unwrap_or(path)
         } else {
             path
         };
 
-        let path_string = match path.to_str() {
-            Some(path) => path.replace("\\", "/"),
-            None => return None,
-        };
+        // Get C:/Users/me/folder/.gitignore
+        let gitignore_path = gitignore_file.path();
+        // Get C:/Users/me/folder
+        let gitignore_path = Path::new(&gitignore_path).parent()?;
+        let path_string = path.to_str()?;
 
-        let file_name = match path_string.rsplit_once("/") {
-            Some((_, file_name)) => file_name,
-            None => line_content,
-        };
+        // Get currently typed filename
+        let (_, file_name) = path_string.rsplit_once("/").unwrap_or(("", line_content));
+        let file_name = file_name.to_string();
 
+        // Join path
         let complete_path = Path::join(gitignore_path, relative_path);
 
+        // Search for files
         let paths = match read_dir(complete_path) {
             Ok(paths) => paths,
             Err(error) => {
@@ -131,9 +126,7 @@ impl CompletionModule {
             }
         };
 
-        Some(Self::completion_items_for_paths(
-            paths,
-            file_name.to_string(),
-        ))
+        // Return items
+        Some(Self::completion_items_for_paths(paths, file_name))
     }
 }
