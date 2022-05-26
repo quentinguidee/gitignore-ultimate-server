@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -19,14 +19,23 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            extension: ".exe"
           - os: macos-latest
             target: x86_64-apple-darwin
+            extension: ""
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            extension: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Build
-        run: cargo build --target ${{ matrix.target }} --verbose
+        run: cargo build --target ${{ matrix.target }}
+
+      - name: Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}${{ matrix.extension }}
+          path: target/${{ matrix.target }}/debug/gitignore_ultimate_server${{ matrix.extension }}
