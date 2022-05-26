@@ -39,3 +39,30 @@ impl File {
         self.text.insert(start, text.as_str());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tower_lsp::lsp_types::Url;
+
+    use crate::file::File;
+
+    #[test]
+    fn it_can_get_line_content() {
+        let url = Url::parse("file:///a").unwrap();
+        let content = "First line\nSecond line\nThird line".to_string();
+
+        let file = File::new(url, content);
+
+        let line_content = file.get_line_content(1);
+        assert_eq!(line_content, "Second line\n");
+    }
+
+    #[test]
+    fn it_can_get_path() {
+        let url = Url::parse("file:///Users/me/file").unwrap();
+        let file = File::new(url, "".to_string());
+
+        let line_content = file.path();
+        assert_eq!(line_content, "/Users/me/file");
+    }
+}

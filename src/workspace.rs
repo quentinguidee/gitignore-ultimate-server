@@ -60,3 +60,31 @@ impl Workspace {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tower_lsp::lsp_types::Url;
+
+    use crate::{file::File, workspace::Workspace};
+
+    #[test]
+    fn it_can_add_and_remove_files() {
+        let workspace = Workspace::new();
+
+        assert_eq!(workspace.files.len(), 0);
+
+        let urls = vec![
+            Url::parse("file:///a").unwrap(),
+            Url::parse("file:///b").unwrap(),
+        ];
+
+        workspace.add_file(File::new(urls[0].clone(), "content".to_string()));
+        workspace.add_file(File::new(urls[1].clone(), "content".to_string()));
+
+        assert_eq!(workspace.files.len(), 2);
+
+        workspace.remove_file(urls[1].clone());
+
+        assert_eq!(workspace.files.len(), 1);
+    }
+}
