@@ -1,4 +1,5 @@
 use ropey::Rope;
+use std::path::Path;
 use tower_lsp::lsp_types::{TextDocumentContentChangeEvent, Url};
 
 pub struct File {
@@ -18,8 +19,13 @@ impl File {
         self.text.line(line_number as usize).to_string()
     }
 
-    pub fn path(&self) -> String {
-        self.url.path().to_string()
+    pub fn path(&self) -> &Path {
+        Path::new(self.url.path())
+    }
+
+    pub fn directory(&self) -> Option<&Path> {
+        let parent = self.path().parent()?;
+        Some(parent)
     }
 
     pub fn apply_change(&mut self, change: TextDocumentContentChangeEvent) {
@@ -62,7 +68,16 @@ mod tests {
         let url = Url::parse("file:///Users/me/file").unwrap();
         let file = File::new(url, "".to_string());
 
-        let line_content = file.path();
+        let line_content = file.path().to_str().unwrap();
         assert_eq!(line_content, "/Users/me/file");
+    }
+
+    #[test]
+    fn it_can_get_directory() {
+        let url = Url::parse("file:///Users/me/file").unwrap();
+        let file = File::new(url, "".to_string());
+
+        let directory = file.directory().unwrap();
+        assert_eq!(directory.to_str().unwrap(), "/Users/me");
     }
 }

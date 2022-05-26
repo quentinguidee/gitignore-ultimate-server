@@ -77,10 +77,12 @@ impl CompletionModule {
         workspace: &Workspace,
         client: &Client,
     ) -> Option<CompletionResponse> {
+        let gitignore_document_position = params.text_document_position;
+        let line = gitignore_document_position.position.line;
+
         // Get gitignore file
-        let gitignore_file_uri = &params.text_document_position.text_document.uri;
-        let gitignore_file = workspace.files.get(&gitignore_file_uri.to_string());
-        let gitignore_file = match gitignore_file {
+        let gitignore_file_uri = gitignore_document_position.text_document.uri;
+        let gitignore_file = match workspace.files.get(&gitignore_file_uri.to_string()) {
             Some(file) => file,
             None => {
                 let error = format!(
@@ -91,34 +93,29 @@ impl CompletionModule {
                 return None;
             }
         };
-        let gitignore_file = &gitignore_file.value();
 
-        // Get currently typed path
-        let line_content =
-            gitignore_file.get_line_content(params.text_document_position.position.line);
+        let line_content = gitignore_file.get_line_content(line);
         let line_content = line_content.trim();
-        let path = Path::new(line_content);
+
+        // Paths
+        let absolute_path = gitignore_file.directory()?;
+
+        let relative_path = Path::new(line_content);
         let relative_path = if !line_content.ends_with("/") {
-            path.parent().unwrap_or(path)
+            relative_path.parent().unwrap_or(relative_path)
         } else {
-            path
+            relative_path
         };
 
-        // Get C:/Users/me/folder/.gitignore
-        let gitignore_path = gitignore_file.path();
-        // Get C:/Users/me/folder
-        let gitignore_path = Path::new(&gitignore_path).parent()?;
-        let path_string = path.to_str()?;
-
-        // Get currently typed filename
-        let (_, file_name) = path_string.rsplit_once("/").unwrap_or(("", line_content));
+        // Filename
+        let file_name = match line_content.rsplit_once("/") {
+            Some((_, file_name)) => file_name,
+            None => line_content,
+        };
         let file_name = file_name.to_string();
 
-        // Join path
-        let complete_path = Path::join(gitignore_path, relative_path);
-
         // Search for files
-        let paths = match read_dir(complete_path) {
+        let paths = match read_dir(Path::join(absolute_path, relative_path)) {
             Ok(paths) => paths,
             Err(error) => {
                 client.log_message(MessageType::ERROR, error).await;
