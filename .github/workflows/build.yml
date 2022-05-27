@@ -10,7 +10,19 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: cargo test
+
   build:
+    needs: test
     name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
 
@@ -46,6 +58,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
 
       - name: Build
         run: cargo build --target ${{ matrix.target }}
