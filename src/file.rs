@@ -1,5 +1,6 @@
+use percent_encoding::percent_decode;
 use ropey::Rope;
-use std::path::Path;
+use std::path::PathBuf;
 use tower_lsp::lsp_types::{TextDocumentContentChangeEvent, Url};
 
 pub struct File {
@@ -19,13 +20,25 @@ impl File {
         self.text.line(line_number as usize).to_string()
     }
 
-    pub fn path(&self) -> &Path {
-        Path::new(self.url.path())
+    pub fn path(&self) -> Result<PathBuf, String> {
+        let path = self.url.path();
+        let path = match percent_decode(&path.as_bytes()).decode_utf8() {
+            Ok(path) => path.to_string(),
+            Err(error) => return Err(error.to_string()),
+        };
+        Ok(PathBuf::from(path))
     }
 
-    pub fn directory(&self) -> Option<&Path> {
-        let parent = self.path().parent()?;
-        Some(parent)
+    pub fn directory(&self) -> Result<PathBuf, String> {
+        let path = match self.path() {
+            Ok(path) => path,
+            Err(error) => return Err(error),
+        };
+        let parent = match path.parent() {
+            Some(parent) => parent,
+            None => return Err(format!("Couldn't get parent of {:?}", path)),
+        };
+        Ok(PathBuf::from(parent))
     }
 
     pub fn apply_change(&mut self, change: TextDocumentContentChangeEvent) {
@@ -68,8 +81,20 @@ mod tests {
         let url = Url::parse("file:///Users/me/file").unwrap();
         let file = File::new(url, "".to_string());
 
-        let line_content = file.path().to_str().unwrap();
+        let path = file.path().unwrap();
+        let line_content = path.to_str().unwrap();
         assert_eq!(line_content, "/Users/me/file");
+    }
+
+    #[test]
+    fn it_can_get_strange_windows_path() {
+        let url = Url::parse("file:///c%3A/Users/me/folder\\subfolder\\filename").unwrap();
+        let file = File::new(url, "content".to_string());
+
+        assert_eq!(
+            file.path().unwrap().to_str().unwrap(),
+            "/c:/Users/me/folder/subfolder/filename"
+        );
     }
 
     #[test]

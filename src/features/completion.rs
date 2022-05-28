@@ -4,11 +4,8 @@ use std::{
     path::Path,
 };
 
-use tower_lsp::{
-    lsp_types::{
-        CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse, MessageType,
-    },
-    Client,
+use tower_lsp::lsp_types::{
+    CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
 };
 
 use crate::workspace::Workspace;
@@ -71,12 +68,11 @@ impl CompletionModule {
         CompletionResponse::Array(items)
     }
 
-    pub async fn get_response(
+    pub fn get_completion(
         &self,
         params: CompletionParams,
         workspace: &Workspace,
-        client: &Client,
-    ) -> Option<CompletionResponse> {
+    ) -> Result<CompletionResponse, String> {
         let gitignore_document_position = params.text_document_position;
         let line = gitignore_document_position.position.line;
 
@@ -85,12 +81,10 @@ impl CompletionModule {
         let gitignore_file = match workspace.files.get(&gitignore_file_uri.to_string()) {
             Some(file) => file,
             None => {
-                let error = format!(
+                return Err(format!(
                     "The file {url} is not opened on the server.",
                     url = gitignore_file_uri.to_string()
-                );
-                client.log_message(MessageType::ERROR, error).await;
-                return None;
+                ));
             }
         };
 
@@ -98,7 +92,10 @@ impl CompletionModule {
         let line_content = line_content.trim();
 
         // Paths
-        let absolute_path = gitignore_file.directory()?;
+        let absolute_path = match gitignore_file.directory() {
+            Ok(path) => path,
+            Err(error) => return Err(error),
+        };
 
         let relative_path = Path::new(line_content);
         let relative_path = if !line_content.ends_with("/") {
@@ -115,15 +112,12 @@ impl CompletionModule {
         let file_name = file_name.to_string();
 
         // Search for files
-        let paths = match read_dir(Path::join(absolute_path, relative_path)) {
+        let paths = match read_dir(Path::join(&absolute_path, relative_path)) {
             Ok(paths) => paths,
-            Err(error) => {
-                client.log_message(MessageType::ERROR, error).await;
-                return None;
-            }
+            Err(error) => return Err(error.to_string()),
         };
 
         // Return items
-        Some(Self::completion_items_for_paths(paths, file_name))
+        Ok(Self::completion_items_for_paths(paths, file_name))
     }
 }

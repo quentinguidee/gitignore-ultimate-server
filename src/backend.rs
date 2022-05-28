@@ -79,9 +79,15 @@ impl LanguageServer for Backend {
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        Ok(self
+        match self
             .completion_module
-            .get_response(params, &self.workspace, &self.client)
-            .await)
+            .get_completion(params, &self.workspace)
+        {
+            Ok(completions) => Ok(Some(completions)),
+            Err(error) => {
+                self.client.log_message(MessageType::ERROR, error).await;
+                Ok(None)
+            }
+        }
     }
 }

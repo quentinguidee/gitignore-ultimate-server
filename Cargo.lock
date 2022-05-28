@@ -152,6 +152,7 @@ name = "gitignore_ultimate_server"
 version = "0.0.1"
 dependencies = [
  "dashmap",
+ "percent-encoding",
  "ropey",
  "tokio",
  "tower-lsp",
