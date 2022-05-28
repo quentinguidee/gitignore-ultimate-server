@@ -1,7 +1,7 @@
 use percent_encoding::percent_decode;
 use ropey::Rope;
 use std::path::PathBuf;
-use tower_lsp::lsp_types::{TextDocumentContentChangeEvent, Url};
+use tower_lsp::lsp_types::{Range, TextDocumentContentChangeEvent, Url};
 
 pub struct File {
     pub url: Url,
@@ -46,10 +46,9 @@ impl File {
             None => return,
         };
 
-        let start = range.start;
-        let start = self.text.line_to_char(start.line as usize) + (start.character as usize);
+        let Range { start, end } = range;
 
-        let end = range.end;
+        let start = self.text.line_to_char(start.line as usize) + (start.character as usize);
         let end = self.text.line_to_char(end.line as usize) + end.character as usize;
 
         self.text.remove(start..end);

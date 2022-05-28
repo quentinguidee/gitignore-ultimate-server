@@ -6,6 +6,7 @@ use std::{
 
 use tower_lsp::lsp_types::{
     CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
+    TextDocumentPositionParams,
 };
 
 use crate::workspace::Workspace;
@@ -73,22 +74,23 @@ impl CompletionModule {
         params: CompletionParams,
         workspace: &Workspace,
     ) -> Result<CompletionResponse, String> {
-        let gitignore_document_position = params.text_document_position;
-        let line = gitignore_document_position.position.line;
+        let TextDocumentPositionParams {
+            position,
+            text_document,
+        } = params.text_document_position;
 
         // Get gitignore file
-        let gitignore_file_uri = gitignore_document_position.text_document.uri;
-        let gitignore_file = match workspace.files.get(&gitignore_file_uri.to_string()) {
+        let gitignore_file = match workspace.files.get(&text_document.uri.to_string()) {
             Some(file) => file,
             None => {
                 return Err(format!(
                     "The file {url} is not opened on the server.",
-                    url = gitignore_file_uri.to_string()
+                    url = text_document.uri.to_string()
                 ));
             }
         };
 
-        let line_content = gitignore_file.get_line_content(line);
+        let line_content = gitignore_file.get_line_content(position.line);
         let line_content = line_content.trim();
 
         // Paths
