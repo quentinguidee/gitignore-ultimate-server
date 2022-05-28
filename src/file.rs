@@ -22,11 +22,10 @@ impl File {
 
     pub fn path(&self) -> Result<PathBuf, String> {
         let path = self.url.path();
-        let path = match percent_decode(&path.as_bytes()).decode_utf8() {
-            Ok(path) => path.to_string(),
-            Err(error) => return Err(error.to_string()),
-        };
-        Ok(PathBuf::from(path))
+        match percent_decode(&path.as_bytes()).decode_utf8() {
+            Ok(path) => Ok(PathBuf::from(path.to_string())),
+            Err(error) => Err(error.to_string()),
+        }
     }
 
     pub fn directory(&self) -> Result<PathBuf, String> {
@@ -34,11 +33,10 @@ impl File {
             Ok(path) => path,
             Err(error) => return Err(error),
         };
-        let parent = match path.parent() {
-            Some(parent) => parent,
-            None => return Err(format!("Couldn't get parent of {:?}", path)),
-        };
-        Ok(PathBuf::from(parent))
+        match path.parent() {
+            Some(parent) => Ok(PathBuf::from(parent)),
+            None => Err(format!("Couldn't get parent of {:?}", path)),
+        }
     }
 
     pub fn apply_change(&mut self, change: TextDocumentContentChangeEvent) {
