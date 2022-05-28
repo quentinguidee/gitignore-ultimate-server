@@ -114,7 +114,12 @@ impl CompletionModule {
         let file_name = file_name.to_string();
 
         // Search for files
-        let paths = match read_dir(Path::join(&absolute_path, relative_path)) {
+        let path = Path::join(&absolute_path, relative_path);
+
+        #[cfg(windows)]
+        let path = path.strip_prefix("/").unwrap_or(&path);
+
+        let paths = match read_dir(path) {
             Ok(paths) => paths,
             Err(error) => return Err(error.to_string()),
         };
