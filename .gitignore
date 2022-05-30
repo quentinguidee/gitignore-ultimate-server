@@ -1,6 +1,7 @@
 # Text editors and IDE
 .vscode/**
 .idea/**
+*.iml
 
 # Project
 /target
