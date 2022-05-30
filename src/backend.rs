@@ -1,9 +1,9 @@
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
+use ultimate_server_core::file_system::workspace::Workspace;
 
 use crate::features::completion::CompletionModule;
-use crate::workspace::Workspace;
 
 pub struct Backend {
     client: Client,
