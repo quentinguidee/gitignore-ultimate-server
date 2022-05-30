@@ -151,11 +151,9 @@ dependencies = [
 name = "gitignore_ultimate_server"
 version = "0.1.0"
 dependencies = [
- "dashmap",
- "percent-encoding",
- "ropey",
  "tokio",
  "tower-lsp",
+ "ultimate-server-core",
 ]
 
 [[package]]
@@ -654,6 +652,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f54c8ca710e81886d498c2fd3331b56c93aa248d49de2222ad2742247c60072f"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "ultimate-server-core"
+version = "0.0.0"
+source = "git+https://github.com/quentinguidee/ultimate-server-core#063d13aeb0af10e949a1d0bc320303ca956d6f3e"
+dependencies = [
+ "dashmap",
+ "percent-encoding",
+ "ropey",
+ "tower-lsp",
 ]
 
 [[package]]

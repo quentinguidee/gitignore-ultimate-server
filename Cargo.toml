@@ -10,11 +10,6 @@ features = ["full"]
 [dependencies.tower-lsp]
 version = "*"
 
-[dependencies.dashmap]
-version = "5"
-
-[dependencies.ropey]
-version = "1"
-
-[dependencies.percent-encoding]
-version = "2.1.0"
+[dependencies.ultimate-server-core]
+git = "https://github.com/quentinguidee/ultimate-server-core"
+# tag = "0.0.0"

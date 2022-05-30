@@ -18,6 +18,12 @@ This server implements the [Language Server Protocol](https://microsoft.github.i
 
 * [Gitignore Ultimate for VSCode](https://github.com/quentinguidee/gitignore-ultimate-vscode) (`>=0.2.0`)
 
+## Build the project
+
+```bash
+cargo build 
+```
+
 ## License
 
 This project is licensed under the [MIT License](./LICENSE.md).

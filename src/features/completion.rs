@@ -8,8 +8,7 @@ use tower_lsp::lsp_types::{
     CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse,
     TextDocumentPositionParams,
 };
-
-use crate::workspace::Workspace;
+use ultimate_server_core::file_system::workspace::Workspace;
 
 #[derive(Default)]
 pub struct CompletionModule {}
