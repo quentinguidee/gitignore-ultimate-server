@@ -90,7 +90,10 @@ impl CompletionModule {
         };
 
         let line_content = gitignore_file.get_line_content(position.line);
-        let line_content = line_content.trim();
+        let mut line_content = line_content.trim();
+        while line_content.starts_with("/") || line_content.starts_with("!") {
+            line_content = &line_content[1..]
+        }
 
         // Paths
         let absolute_path = match gitignore_file.directory() {
