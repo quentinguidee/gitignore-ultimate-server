@@ -1,13 +1,7 @@
 <p align="center">
-    <img width="256" height="256" src="https://github.com/quentinguidee/gitignore-ultimate-vscode/raw/master/icon-1024.png" />
+    <img src="./assets/gitignore-ultimate-icon.png" />
 </p>
 <h1 align="center">Gitignore Ultimate — Server</h1>
-<p align="center">
-<img alt="GitHub" src="https://img.shields.io/github/license/quentinguidee/gitignore-ultimate?style=for-the-badge&color=red&logo=open-source-initiative&logoColor=white">
-</p>
-
----
-
 
 Ultimate extensions are a group of extensions allowing faster coding in VSCode. Gitignore Ultimate allows to speed up
 the drafting of `.gitignore` files.
